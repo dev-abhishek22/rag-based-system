@@ -6,3 +6,6 @@ chunks:
 
 validate-chunks:
 	uv run python -m src.commands.validate_chunks --file data/chunks/car_$(CAR_ID)_chunks.json
+
+embed-car:
+	uv run python -m src.scripts.embed_car_chunks --car-id $(CAR_ID)

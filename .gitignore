@@ -20,3 +20,5 @@ Logs
 .env.local
 
 data
+
+qdrant_storage

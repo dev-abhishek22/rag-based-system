@@ -64,7 +64,10 @@ def save_chunks(chunks: list[dict], car_id: int) -> Path:
     )
 
 
-def save_embeddings(embeddings: list, car_id: int) -> Path:
+def save_embeddings(
+    embeddings: list[dict],
+    car_id: int,
+) -> Path:
     return save_json(
         data=embeddings,
         filename=f"car_{car_id}_embeddings.json",
