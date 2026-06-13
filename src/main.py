@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from src.database.connection import db_connection
 from src.logger.logger_service import logger_service
 from src.error.global_exception_handler import global_exception_handler
+from src.routes.index import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +18,8 @@ app = FastAPI(
 )
 
 logger_service.log("Application logger initialized", "Main")
+
+app.include_router(api_router)
 
 app.add_exception_handler(Exception, global_exception_handler)
 app.add_exception_handler(StarletteHTTPException, global_exception_handler)

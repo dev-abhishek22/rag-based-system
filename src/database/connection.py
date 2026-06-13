@@ -2,6 +2,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.config.settings import settings
+from src.logger.logger_service import logger_service, SQLAlchemyHandler
+import logging
 
 DATABASE_URL = (
     f"mysql+pymysql://"
@@ -21,8 +23,13 @@ engine = create_engine(
     pool_timeout=60,
     pool_recycle=1800,
     pool_pre_ping=True,
-    echo=is_dev,
+    echo=False,
 )
+
+if is_dev:
+    sqlalchemy_logger = logging.getLogger("sqlalchemy.engine")
+    sqlalchemy_logger.handlers = [SQLAlchemyHandler()]
+    sqlalchemy_logger.setLevel(logging.INFO)
 
 SessionLocal = sessionmaker(
     bind=engine,
@@ -47,8 +54,15 @@ def db_connection():
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
 
-        print("✅ Database connected successfully")
+        logger_service.log(
+            "Database connected successfully",
+            "Database",
+        )
+
     except Exception as error:
-        print("❌ Database connection failed")
-        print(error)
+        logger_service.error(
+            "Database connection failed",
+            str(error),
+            "Database",
+        )
         raise
