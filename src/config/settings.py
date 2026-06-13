@@ -12,6 +12,8 @@ class Settings(BaseSettings):
 
     APP_NAME: str
 
+    SQL_LOGGING: bool = True
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

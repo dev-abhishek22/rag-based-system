@@ -47,6 +47,8 @@ def _base_metadata(car: dict) -> dict:
         "submodel_name": car.get("submodel_name"),
         "submodel_slug": car.get("submodel_slug"),
         "url": car.get("url"),
+        "brand_url": car.get("brand_url"),
+        "image_page_url": car.get("image_page_url"),
         "is_ev": car.get("is_ev"),
         "is_popular": car.get("is_popular"),
         "is_trending": car.get("is_trending"),
@@ -81,14 +83,23 @@ def _chunk_car_overview(car: dict, meta: dict) -> Optional[dict]:
     _add_field(parts, car, "submodel_name", "Submodel")
     _add_field(parts, car, "description", "Description")
     _add_field(parts, car, "overview", "Overview")
-    _add_field(parts, car, "latest_updates", "Latest updates")
-    _add_field(parts, car, "whats_new", "What's new")
     _add_field(parts, car, "launched_at", "Launched at")
     _add_field(parts, car, "upcoming_date", "Upcoming date")
     _add_field(parts, car, "upcoming_type", "Upcoming type")
     _add_field(parts, car, "overall_rating", "Overall rating")
 
     return _chunk("\n".join(parts), "car_overview", meta)
+
+
+def _chunk_car_latest_updates(car: dict, meta: dict) -> Optional[dict]:
+    parts = []
+
+    _add_field(parts, car, "car_name", "Car")
+    _add_field(parts, car, "latest_updates", "Latest updates")
+    _add_field(parts, car, "whats_new", "What's new")
+    _add_field(parts, car, "upcoming_updates", "Upcoming updates")
+
+    return _chunk("\n".join(parts), "car_latest_updates", meta)
 
 
 def _chunk_car_price_summary(car: dict, meta: dict) -> Optional[dict]:
@@ -416,6 +427,208 @@ def _trim_metadata(trim: dict, meta: dict) -> dict:
     }
 
 
+def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
+    chunks = []
+    trim_meta = _trim_metadata(trim, meta)
+
+    groups = {
+        "trim_overview": [
+            ("trim_name", "Variant"),
+            ("absolute_price", "Price"),
+            ("fuel_type", "Fuel type"),
+            ("secondary_fuel_type", "Secondary fuel type"),
+            ("engine", "Engine"),
+            ("engine_type", "Engine type"),
+            ("configuration", "Configuration"),
+            ("displacement", "Displacement"),
+            ("power", "Power"),
+            ("torque", "Torque"),
+            ("max_power", "Max power"),
+            ("max_torque", "Max torque"),
+            ("transmission", "Transmission"),
+            ("transmission_type", "Transmission type"),
+            ("gearbox", "Gearbox"),
+            ("drive_type", "Drive type"),
+            ("top_speed", "Top speed"),
+            ("acceleration", "Acceleration"),
+            ("acceleration_0_100kmph", "0-100 kmph acceleration"),
+            ("mileage", "Mileage"),
+            ("fuel_tank", "Fuel tank"),
+            ("drive_modes", "Drive modes"),
+            ("paddle_shifters", "Paddle shifters"),
+        ],
+
+        "trim_features": [
+            ("trim_name", "Variant"),
+
+            # Safety
+            ("no_of_airbags", "Airbags"),
+            ("driver_airbag", "Driver airbag"),
+            ("passenger_airbag", "Passenger airbag"),
+            ("side_airbag", "Side airbag"),
+            ("side_airbag_rear", "Rear side airbag"),
+            ("curtain_airbag", "Curtain airbag"),
+            ("anti_lock_braking_system_abs", "ABS"),
+            ("electronic_brakeforce_distribution_ebd", "EBD"),
+            ("electronic_stability_control_esc", "ESC"),
+            ("brake_assist", "Brake assist"),
+            ("hill_assist", "Hill assist"),
+            ("hill_descent_control", "Hill descent control"),
+            ("tyre_pressure_monitoring_system_tpms", "TPMS"),
+            ("360_view_camera", "360 view camera"),
+            ("rear_camera", "Rear camera"),
+            ("parking_sensors", "Parking sensors"),
+            ("isofix_child_seat_mounts", "ISOFIX child seat mounts"),
+            ("child_safety_locks", "Child safety locks"),
+            ("seat_belt_warning", "Seat belt warning"),
+            ("door_ajar_warning", "Door ajar warning"),
+            ("engine_immobilizer", "Engine immobilizer"),
+            ("anti_theft_alarm", "Anti theft alarm"),
+            ("speed_alert", "Speed alert"),
+            ("speed_sensing_auto_door_lock", "Speed sensing auto door lock"),
+            ("global_ncap_safety_rating", "Global NCAP safety rating"),
+            ("bharat_ncap_safety_rating", "Bharat NCAP safety rating"),
+
+            # Comfort
+            ("air_conditioner", "Air conditioner"),
+            ("heater", "Heater"),
+            ("automatic_climate_control", "Automatic climate control"),
+            ("rear_ac_vents", "Rear AC vents"),
+            ("power_steering", "Power steering"),
+            ("adjustable_steering", "Adjustable steering"),
+            ("height_adjustable_driver_seat", "Height adjustable driver seat"),
+            ("electric_adjustable_seats", "Electric adjustable seats"),
+            ("ventilated_seats", "Ventilated seats"),
+            ("heated_seats", "Heated seats"),
+            ("leather_seats", "Leather seats"),
+            ("cruise_control", "Cruise control"),
+            ("keyless_entry", "Keyless entry"),
+            ("power_windows", "Power windows"),
+            ("foldable_rear_seat", "Foldable rear seat"),
+            ("cooled_glovebox", "Cooled glovebox"),
+            ("remote_trunk_opener", "Remote trunk opener"),
+            ("power_boot", "Power boot"),
+            ("rain_sensing_wiper", "Rain sensing wiper"),
+            ("start_stop", "Start stop"),
+            ("idle_start_stop_system", "Idle start stop system"),
+
+            # Infotainment
+            ("touchscreen", "Touchscreen"),
+            ("touchscreen_size", "Touchscreen size"),
+            ("android_auto", "Android Auto"),
+            ("apple_carplay", "Apple CarPlay"),
+            ("wireless_phone_charging", "Wireless phone charging"),
+            ("wireless_charging", "Wireless charging"),
+            ("bluetooth_connectivity", "Bluetooth connectivity"),
+            ("navigation_system", "Navigation system"),
+            ("navigation_with_live_traffic", "Navigation with live traffic"),
+            ("radio", "Radio"),
+            ("usb_charger", "USB charger"),
+            ("usb_ports", "USB ports"),
+            ("speakers", "Speakers"),
+            ("no_of_speakers", "Number of speakers"),
+            ("voice_commands", "Voice commands"),
+            ("google_alexa_connectivity", "Google Alexa connectivity"),
+            ("smartwatch_app", "Smartwatch app"),
+            ("over_the_air_ota_updates", "OTA updates"),
+            ("live_location", "Live location"),
+            ("digital_cluster", "Digital cluster"),
+            ("digital_cluster_size", "Digital cluster size"),
+
+            # Interior / Exterior
+            ("upholstery", "Upholstery"),
+            ("fabric_upholstery", "Fabric upholstery"),
+            ("leather_wrapped_steering_wheel", "Leather wrapped steering wheel"),
+            ("dual_tone_dashboard", "Dual tone dashboard"),
+            ("ambient_light_colour_numbers", "Ambient light colours"),
+            ("additional_features", "Additional features"),
+            ("sunroof", "Sunroof"),
+            ("roof_rails", "Roof rails"),
+            ("fog_lights", "Fog lights"),
+            ("led_headlamps", "LED headlamps"),
+            ("led_drls", "LED DRLs"),
+            ("led_taillights", "LED taillights"),
+            ("led_fog_lamps", "LED fog lamps"),
+            ("halogen_headlamps", "Halogen headlamps"),
+            ("projector_headlamps", "Projector headlamps"),
+            ("rear_window_wiper", "Rear window wiper"),
+            ("rear_window_washer", "Rear window washer"),
+            ("rear_window_defogger", "Rear window defogger"),
+            ("rear_spoiler", "Rear spoiler"),
+            ("outside_rear_view_mirror_orvm", "ORVM"),
+            ("chrome_grille", "Chrome grille"),
+            ("tinted_glass", "Tinted glass"),
+            ("puddle_lamps", "Puddle lamps"),
+            ("dual_tone_body_colour", "Dual tone body colour"),
+        ],
+
+        "trim_dimensions_ownership": [
+            ("trim_name", "Variant"),
+
+            # Dimensions
+            ("body_type", "Body type"),
+            ("bodystyle", "Body style"),
+            ("length", "Length"),
+            ("width", "Width"),
+            ("height", "Height"),
+            ("wheelbase", "Wheelbase"),
+            ("ground_clearance", "Ground clearance"),
+            ("ground_clearance_laden", "Ground clearance laden"),
+            ("ground_clearance_unladen", "Ground clearance unladen"),
+            ("kerb_weight", "Kerb weight"),
+            ("gross_weight", "Gross weight"),
+            ("seating_capacity", "Seating capacity"),
+            ("no_of_doors", "Doors"),
+            ("boot_space", "Boot space"),
+            ("boot_space_rear_seat_folding", "Boot space rear seat folding"),
+            ("approach_angle", "Approach angle"),
+            ("break_over_angle", "Break over angle"),
+            ("departure_angle", "Departure angle"),
+            ("drag_coefficient", "Drag coefficient"),
+
+            # Wheels / Suspension
+            ("tyre_size", "Tyre size"),
+            ("tyre_type", "Tyre type"),
+            ("wheel_size", "Wheel size"),
+            ("alloy_wheels", "Alloy wheels"),
+            ("wheel_covers", "Wheel covers"),
+            ("alloy_wheel_size", "Alloy wheel size"),
+            ("front_track", "Front track"),
+            ("rear_track", "Rear track"),
+            ("turning_radius", "Turning radius"),
+            ("front_suspension", "Front suspension"),
+            ("rear_suspension", "Rear suspension"),
+            ("front_brake_type", "Front brake"),
+            ("rear_brake_type", "Rear brake"),
+            ("steering_type", "Steering type"),
+            ("steering_column", "Steering column"),
+            ("steering_gear_type", "Steering gear type"),
+            ("shock_absorbers_type", "Shock absorbers type"),
+
+            # Ownership
+            ("warranty_years", "Warranty years"),
+            ("warranty_kilometres", "Warranty kilometres"),
+            ("battery_warranty", "Battery warranty"),
+            ("battery_warranty_years", "Battery warranty years"),
+            ("battery_warranty_kilometres", "Battery warranty kilometres"),
+            ("service_cost", "Service cost"),
+        ],
+    }
+
+    for chunk_type, fields in groups.items():
+        parts = []
+
+        for field, label in fields:
+            _add_field(parts, trim, field, label)
+
+        chunk = _chunk("\n".join(parts), chunk_type, trim_meta)
+
+        if chunk:
+            chunks.append(chunk)
+
+    return chunks
+
+
 def _chunk_trim_sections(trim: dict, meta: dict) -> list[dict]:
     chunks = []
     trim_meta = _trim_metadata(trim, meta)
@@ -467,6 +680,7 @@ def _chunk_city_prices(prices: list, trim_map: dict, meta: dict, batch_size: int
                     "trim_id": trim_id,
                     "trim_name": trim_name,
                     "city_price_batch": i // batch_size + 1,
+                    "price_url": batch[0].get("price_url"),
                 },
             )
 
@@ -508,6 +722,7 @@ def _chunk_comparisons(comparisons: list, meta: dict) -> list[dict]:
                 "compare_car_name": c.get("compare_car_name"),
                 "compare_brand_name": c.get("compare_brand_name"),
                 "is_popular": c.get("is_popular"),
+                "comparison_url": c.get("comparison_url"),
                 "car_url": c.get("car_url"),
                 "compare_car_url": c.get("compare_car_url"),
             },
@@ -616,6 +831,7 @@ def format_car_chunks(payload: dict, include_images: bool = False) -> list[dict]
 
     for chunk in [
         _chunk_car_overview(car, meta),
+        _chunk_car_latest_updates(car, meta),
         _chunk_car_price_summary(car, meta),
         _chunk_car_pros_cons(car, meta),
         _chunk_similar_cars(similar_cars, meta),
@@ -628,7 +844,7 @@ def format_car_chunks(payload: dict, include_images: bool = False) -> list[dict]
     chunks.extend(_chunk_faqs(car, meta))
 
     for trim in trims:
-        chunks.extend(_chunk_trim_sections(trim, meta))
+        chunks.extend(_chunk_trim_grouped(trim, meta))
 
     chunks.extend(_chunk_city_prices(prices, trim_map, meta))
     chunks.extend(_chunk_comparisons(comparisons, meta))

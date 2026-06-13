@@ -18,7 +18,7 @@ class CarEtlRepository:
             SELECT
                 c.car_id,
                 c.car_name,
-                CONCAT('cars/', b.slug, '/', m.slug) AS url,
+                CONCAT('/cars/', b.slug, '/', m.slug) AS url,
                 c.is_popular,
                 c.is_trending,
                 c.is_ev,
@@ -55,10 +55,16 @@ class CarEtlRepository:
                 c.key_highlights,
                 c.gst_reform_price,
                 c.is_gst_reform,
+                CASE
+                    WHEN c.is_image_page = 1
+                    THEN CONCAT('/cars/', b.slug, '/', m.slug, '/images')
+                    ELSE NULL
+                END AS image_page_url,
 
                 b.brand_id,
                 b.name AS brand_name,
                 b.slug AS brand_slug,
+                CONCAT('/cars/', b.slug) AS brand_url,
 
                 m.model_id,
                 m.name AS model_name,
@@ -483,11 +489,27 @@ class CarEtlRepository:
                 tcp.optional_accessories,
                 tcp.optional_accessories_absolute,
                 tcp.on_road_price,
-                tcp.on_road_price_absolute
+                tcp.on_road_price_absolute,
+                CONCAT(
+                    '/cars/',
+                    b.slug,
+                    '/',
+                    m.slug,
+                    '/price-in-',
+                    c.city_slug
+                ) AS price_url
             FROM trims_city_price tcp
             INNER JOIN cities c
                 ON tcp.city_id = c.id
-               AND c.is_active = TRUE
+            AND c.is_active = TRUE
+            INNER JOIN trims t
+                ON tcp.trim_id = t.trim_id
+            INNER JOIN cars car
+                ON t.car_id = car.car_id
+            INNER JOIN brands b
+                ON car.brand_id = b.brand_id
+            INNER JOIN models m
+                ON car.model_id = m.model_id
             WHERE tcp.trim_id IN :trim_ids
               AND tcp.is_active = TRUE
               AND tcp.deleted_at IS NULL
@@ -553,9 +575,6 @@ class CarEtlRepository:
                 n.description,
                 n.url,
                 n.hero_image,
-                n.likes_count,
-                n.major_category,
-                n.minor_category,
                 n.news_flag,
                 n.created_at,
                 n.updated_at
@@ -583,6 +602,16 @@ class CarEtlRepository:
                 cc.car2_why_choose,
                 cc.car1_recommendation,
                 cc.car2_recommendation,
+                CONCAT(
+                    '/compare-cars/',
+                    b1.slug,
+                    '-',
+                    m1.slug,
+                    '-vs-',
+                    b2.slug,
+                    '-',
+                    m2.slug
+                ) AS comparison_url,
 
                 c1.car_id,
                 c1.car_name,

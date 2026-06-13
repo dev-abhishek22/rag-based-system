@@ -26,7 +26,7 @@ engine = create_engine(
     echo=False,
 )
 
-if is_dev:
+if is_dev and settings.SQL_LOGGING:
     sqlalchemy_logger = logging.getLogger("sqlalchemy.engine")
     sqlalchemy_logger.handlers = [SQLAlchemyHandler()]
     sqlalchemy_logger.setLevel(logging.INFO)

@@ -22,15 +22,26 @@ class CarEtlService:
         trims = self.repository.get_car_trims(db, car_id)
         trim_ids = [t["trim_id"] for t in trims if t.get("trim_id")]
 
+        related_news = self.repository.get_related_news(db, car_id)
+
+        for news in related_news:
+            news["url"] = self._make_news_url(news)
+
+        comparisons = self.repository.get_comparisons(db, car_id)
+        for comparison in comparisons:
+            comparison["comparison_url"] = self._ensure_url(comparison.get("comparison_url"))
+            comparison["car_url"] = self._ensure_url(comparison.get("car_url"))
+            comparison["compare_car_url"] = self._ensure_url(comparison.get("compare_car_url"))
+
         payload = {
-            "car":              car,
-            "images":           self.repository.get_car_images(db, car_id),
-            "trims":            trims,
+            "car": car,
+            "images": self.repository.get_car_images(db, car_id),
+            "trims": trims,
             "trim_city_prices": self.repository.get_trim_city_prices(db, trim_ids),
-            "standout_features":self.repository.get_standout_features(db, car_id),
-            "similar_cars":     self.repository.get_similar_cars(db, car_id),
-            "related_news":     self.repository.get_related_news(db, car_id),
-            "comparisons":      self.repository.get_comparisons(db, car_id),
+            "standout_features": self.repository.get_standout_features(db, car_id),
+            "similar_cars": self.repository.get_similar_cars(db, car_id),
+            "related_news": related_news,
+            "comparisons": comparisons,
         }
 
         payload = deep_clean(payload)
@@ -181,3 +192,30 @@ class CarEtlService:
         resolved["trims"] = [self._resolve_trim(t) for t in resolved.get("trims", [])]
 
         return resolved
+    
+    def _ensure_url(self, url):
+        if not url:
+            return None
+
+        url = str(url).strip()
+
+        if not url.startswith("/"):
+            url = f"/{url}"
+
+        return url
+
+    def _make_news_url(self, news: dict):
+        url = news.get("url")
+
+        if not url:
+            return None
+
+        url = str(url).strip()
+
+        if url.startswith("/car-news/"):
+            return url
+
+        if url.startswith("car-news/"):
+            return f"/{url}"
+
+        return f"/car-news/{url.lstrip('/')}"
