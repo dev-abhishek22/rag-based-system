@@ -51,42 +51,87 @@ class CarEtlService:
 
         return payload
 
-    def fetch_all_active_car_payloads(self, batch_size: int = 50):
-        offset = 0
+    def fetch_all_active_car_payloads(
+        self,
+        batch_size: int = 50,
+        start_after_car_id: int = 0,
+        limit: int | None = None,
+    ):
+        last_car_id = start_after_car_id
         total_processed = 0
+        total_skipped = 0
+        total_failed = 0
 
         while True:
             db = SessionLocal()
+
             try:
-                car_ids = self.repository.get_active_car_ids(
-                    db=db, limit=batch_size, offset=offset
+                remaining_limit = None
+                if limit is not None:
+                    remaining_limit = limit - total_processed
+                    if remaining_limit <= 0:
+                        break
+
+                current_batch_size = batch_size
+                if remaining_limit is not None:
+                    current_batch_size = min(batch_size, remaining_limit)
+
+                car_ids = self.repository.get_active_car_ids_after_id(
+                    db=db,
+                    last_car_id=last_car_id,
+                    limit=current_batch_size,
                 )
 
                 if not car_ids:
                     break
 
                 for car_id in car_ids:
+                    last_car_id = car_id
+
                     try:
                         payload = self.fetch_single_car_payload(db, car_id)
 
                         if not payload:
-                            logger_service.warn(f"Skipped car_id={car_id}, no data found", "CarETL")
+                            total_skipped += 1
+                            logger_service.warn(
+                                f"Skipped car_id={car_id}, no data found",
+                                "CarETL",
+                            )
                             continue
 
                         total_processed += 1
-                        logger_service.log(f"Prepared cleaned payload for car_id={car_id}", "CarETL")
 
-                        yield payload
+                        logger_service.log(
+                            f"Prepared cleaned payload for car_id={car_id}",
+                            "CarETL",
+                        )
+
+                        yield {
+                            "car_id": car_id,
+                            "payload": payload,
+                        }
 
                     except Exception as error:
-                        logger_service.error(f"Failed to prepare payload for car_id={car_id}", str(error), "CarETL")
-
-                offset += batch_size
+                        total_failed += 1
+                        logger_service.error(
+                            f"Failed to prepare payload for car_id={car_id}",
+                            str(error),
+                            "CarETL",
+                        )
 
             finally:
                 db.close()
 
-        logger_service.log(f"Completed. Total processed: {total_processed}", "CarETL")
+        logger_service.log(
+            (
+                "Bulk payload preparation completed. "
+                f"processed={total_processed}, "
+                f"skipped={total_skipped}, "
+                f"failed={total_failed}, "
+                f"last_car_id={last_car_id}"
+            ),
+            "CarETL",
+        )
 
     def _resolve_fuel_tank(self, trim: dict) -> Optional[str]:
         candidates = [

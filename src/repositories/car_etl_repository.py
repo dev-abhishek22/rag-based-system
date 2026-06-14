@@ -2,6 +2,45 @@ from sqlalchemy import text, bindparam
 
 
 class CarEtlRepository:
+
+    def get_active_car_ids_after_id(
+        self,
+        db,
+        last_car_id: int = 0,
+        limit: int = 100,
+    ):
+        query = text("""
+            SELECT c.car_id
+            FROM cars c
+            WHERE c.is_active = TRUE
+            AND c.deleted_at IS NULL
+            AND c.car_id > :last_car_id
+            ORDER BY c.car_id ASC
+            LIMIT :limit
+        """)
+
+        return (
+            db.execute(
+                query,
+                {
+                    "last_car_id": last_car_id,
+                    "limit": limit,
+                },
+            )
+            .scalars()
+            .all()
+        )
+
+    def count_active_cars(self, db) -> int:
+        query = text("""
+            SELECT COUNT(*)
+            FROM cars c
+            WHERE c.is_active = TRUE
+            AND c.deleted_at IS NULL
+        """)
+
+        return int(db.execute(query).scalar() or 0)
+
     def get_active_car_ids(self, db, limit: int = 100, offset: int = 0):
         query = text("""
             SELECT c.car_id
@@ -165,7 +204,9 @@ class CarEtlRepository:
               AND ci.is_active = TRUE
             ORDER BY ci.image_type, ci.id
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]
 
     def get_car_trims(self, db, car_id: int):
         query = text("""
@@ -460,7 +501,9 @@ class CarEtlRepository:
               AND t.deleted_at IS NULL
             ORDER BY t.absolute_price ASC
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]
 
     def get_trim_city_prices(self, db, trim_ids: list[int]):
         if not trim_ids:
@@ -516,7 +559,10 @@ class CarEtlRepository:
             ORDER BY c.city_name ASC, tcp.on_road_price_absolute ASC
         """).bindparams(bindparam("trim_ids", expanding=True))
 
-        return [dict(row) for row in db.execute(query, {"trim_ids": trim_ids}).mappings().all()]
+        return [
+            dict(row)
+            for row in db.execute(query, {"trim_ids": trim_ids}).mappings().all()
+        ]
 
     def get_standout_features(self, db, car_id: int):
         query = text("""
@@ -530,7 +576,9 @@ class CarEtlRepository:
               AND deleted_at IS NULL
             ORDER BY id ASC
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]
 
     def get_similar_cars(self, db, car_id: int):
         query = text("""
@@ -538,7 +586,7 @@ class CarEtlRepository:
                 sc.id,
                 sc.similar_car_id,
                 c.car_name AS similar_car_name,
-                CONCAT('cars/', b.slug, '/', m.slug) AS similar_car_url,
+                CONCAT('/cars/', b.slug, '/', m.slug) AS similar_car_url,
                 c.overall_rating,
                 c.is_ev,
                 c.is_upcoming,
@@ -564,7 +612,9 @@ class CarEtlRepository:
             WHERE sc.car_id = :car_id
               AND sc.is_active = TRUE
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]
 
     def get_related_news(self, db, car_id: int):
         query = text("""
@@ -585,7 +635,9 @@ class CarEtlRepository:
             ORDER BY n.updated_at DESC
             LIMIT 20
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]
 
     def get_comparisons(self, db, car_id: int):
         query = text("""
@@ -653,4 +705,6 @@ class CarEtlRepository:
             ORDER BY cc.priority DESC
             LIMIT 10
         """)
-        return [dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()]
+        return [
+            dict(row) for row in db.execute(query, {"car_id": car_id}).mappings().all()
+        ]

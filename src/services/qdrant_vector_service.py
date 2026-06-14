@@ -5,6 +5,9 @@ from qdrant_client.models import (
     Distance,
     PointStruct,
     VectorParams,
+    FieldCondition,
+    Filter,
+    MatchValue,
 )
 
 from src.config.settings import settings
@@ -29,10 +32,7 @@ class QdrantVectorService:
         Creates the Qdrant collection if it does not already exist.
         """
         collections = self.client.get_collections().collections
-        existing_collections = {
-            collection.name
-            for collection in collections
-        }
+        existing_collections = {collection.name for collection in collections}
 
         if self.collection_name in existing_collections:
             logger_service.log(
@@ -45,9 +45,7 @@ class QdrantVectorService:
             collection_name=self.collection_name,
             vectors_config=VectorParams(
                 size=settings.QDRANT_VECTOR_SIZE,
-                distance=DISTANCE_MAP[
-                    settings.QDRANT_DISTANCE.lower()
-                ],
+                distance=DISTANCE_MAP[settings.QDRANT_DISTANCE.lower()],
             ),
         )
 
@@ -89,22 +87,17 @@ class QdrantVectorService:
 
     def upsert_embeddings(
         self,
-        chunks: list[dict[str, Any]],
-        embeddings: list[list[float]],
+        chunks: list,
+        embeddings: list,
         batch_size: int = 100,
     ):
-        """
-        Inserts or updates embeddings in Qdrant.
-        """
-
         if len(chunks) != len(embeddings):
-            raise ValueError(
-                "Number of chunks and embeddings must be the same."
-            )
+            raise ValueError("Number of chunks and embeddings must be the same.")
 
         self.create_collection_if_not_exists()
 
         total = len(chunks)
+        batches_done = 0
 
         for start in range(0, total, batch_size):
             end = min(start + batch_size, total)
@@ -123,13 +116,34 @@ class QdrantVectorService:
                 wait=True,
             )
 
-            logger_service.log(
-                f"Inserted {end}/{total} vectors into Qdrant",
-                "Qdrant",
-            )
+            batches_done += 1
 
         logger_service.log(
-            f"Successfully inserted {total} vectors into "
-            f"{self.collection_name}",
+            f"Upserted {total} vectors into {self.collection_name} "
+            f"({batches_done} batch(es))",
             "Qdrant",
         )
+
+    def delete_points_by_car_id(self, car_id: int) -> int:
+        result = self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="car_id",
+                        match=MatchValue(value=car_id),
+                    )
+                ]
+            ),
+            wait=True,
+        )
+
+        deleted = getattr(result, "deleted", None)
+
+        logger_service.log(
+            f"Deleted existing vectors for car_id={car_id} "
+            f"(count={deleted if deleted is not None else 'unknown'})",
+            "Qdrant",
+        )
+
+        return deleted or 0

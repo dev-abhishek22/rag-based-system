@@ -139,14 +139,13 @@ def _chunk_car_editorial(car: dict, meta: dict) -> list[dict]:
         ("buying_advice", "Buying advice", "car_buying_advice"),
         ("final_verdict", "Final verdict", "car_final_verdict"),
         ("overall", "Overall review", "car_overall_review"),
-        ("city_overview", "City overview", "car_city_overview"),
-        ("city_content", "City content", "car_city_content"),
-        ("upcoming_updates", "Upcoming updates", "car_upcoming_updates"),
     ]
 
     for field, label, chunk_type in sections:
         if not _is_empty(car.get(field)):
-            chunk = _chunk(f"{label} for {car.get('car_name')}:\n{car[field]}", chunk_type, meta)
+            chunk = _chunk(
+                f"{label} for {car.get('car_name')}:\n{car[field]}", chunk_type, meta
+            )
             if chunk:
                 chunks.append(chunk)
 
@@ -457,11 +456,8 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("drive_modes", "Drive modes"),
             ("paddle_shifters", "Paddle shifters"),
         ],
-
         "trim_features": [
             ("trim_name", "Variant"),
-
-            # Safety
             ("no_of_airbags", "Airbags"),
             ("driver_airbag", "Driver airbag"),
             ("passenger_airbag", "Passenger airbag"),
@@ -488,8 +484,6 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("speed_sensing_auto_door_lock", "Speed sensing auto door lock"),
             ("global_ncap_safety_rating", "Global NCAP safety rating"),
             ("bharat_ncap_safety_rating", "Bharat NCAP safety rating"),
-
-            # Comfort
             ("air_conditioner", "Air conditioner"),
             ("heater", "Heater"),
             ("automatic_climate_control", "Automatic climate control"),
@@ -511,8 +505,6 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("rain_sensing_wiper", "Rain sensing wiper"),
             ("start_stop", "Start stop"),
             ("idle_start_stop_system", "Idle start stop system"),
-
-            # Infotainment
             ("touchscreen", "Touchscreen"),
             ("touchscreen_size", "Touchscreen size"),
             ("android_auto", "Android Auto"),
@@ -534,8 +526,6 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("live_location", "Live location"),
             ("digital_cluster", "Digital cluster"),
             ("digital_cluster_size", "Digital cluster size"),
-
-            # Interior / Exterior
             ("upholstery", "Upholstery"),
             ("fabric_upholstery", "Fabric upholstery"),
             ("leather_wrapped_steering_wheel", "Leather wrapped steering wheel"),
@@ -561,11 +551,8 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("puddle_lamps", "Puddle lamps"),
             ("dual_tone_body_colour", "Dual tone body colour"),
         ],
-
         "trim_dimensions_ownership": [
             ("trim_name", "Variant"),
-
-            # Dimensions
             ("body_type", "Body type"),
             ("bodystyle", "Body style"),
             ("length", "Length"),
@@ -585,8 +572,6 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("break_over_angle", "Break over angle"),
             ("departure_angle", "Departure angle"),
             ("drag_coefficient", "Drag coefficient"),
-
-            # Wheels / Suspension
             ("tyre_size", "Tyre size"),
             ("tyre_type", "Tyre type"),
             ("wheel_size", "Wheel size"),
@@ -604,8 +589,6 @@ def _chunk_trim_grouped(trim: dict, meta: dict) -> list[dict]:
             ("steering_column", "Steering column"),
             ("steering_gear_type", "Steering gear type"),
             ("shock_absorbers_type", "Shock absorbers type"),
-
-            # Ownership
             ("warranty_years", "Warranty years"),
             ("warranty_kilometres", "Warranty kilometres"),
             ("battery_warranty", "Battery warranty"),
@@ -646,7 +629,9 @@ def _chunk_trim_sections(trim: dict, meta: dict) -> list[dict]:
     return chunks
 
 
-def _chunk_city_prices(prices: list, trim_map: dict, meta: dict, batch_size: int = 25) -> list[dict]:
+def _chunk_city_prices(
+    prices: list, trim_map: dict, meta: dict, batch_size: int = 25
+) -> list[dict]:
     chunks = []
     prices_by_trim = {}
 
@@ -658,7 +643,7 @@ def _chunk_city_prices(prices: list, trim_map: dict, meta: dict, batch_size: int
         trim_name = trim_map.get(trim_id, str(trim_id))
 
         for i in range(0, len(rows), batch_size):
-            batch = rows[i:i + batch_size]
+            batch = rows[i : i + batch_size]
             parts = [f"City prices for {meta.get('car_name')} {trim_name}:"]
 
             for p in batch:
@@ -791,20 +776,33 @@ def _image_metadata(images: list, meta: dict) -> list[dict]:
     docs = []
 
     for img in images:
-        docs.append({
-            "text": "",
-            "metadata": {
-                **meta,
-                "chunk_type": "image_metadata",
-                "image_id": img.get("id"),
-                "image_path": img.get("image_path"),
-                "alt_text": img.get("alt_text"),
-                "image_type": img.get("image_type"),
-                "color_id": img.get("color_id"),
-                "color_name": img.get("color_name"),
-                "color_code": img.get("color_code"),
-            },
-        })
+        parts = []
+        _add_field(parts, img, "alt_text", "Image")
+        _add_field(parts, img, "image_type", "Type")
+        _add_field(parts, img, "color_name", "Color")
+        _add_field(parts, img, "color_code", "Color code")
+        _add_field(parts, img, "image_path", "Path")
+
+        text = "\n".join(parts)
+        if not text.strip():
+            continue
+
+        docs.append(
+            {
+                "text": text,
+                "metadata": {
+                    **meta,
+                    "chunk_type": "image_metadata",
+                    "image_id": img.get("id"),
+                    "image_path": img.get("image_path"),
+                    "alt_text": img.get("alt_text"),
+                    "image_type": img.get("image_type"),
+                    "color_id": img.get("color_id"),
+                    "color_name": img.get("color_name"),
+                    "color_code": img.get("color_code"),
+                },
+            }
+        )
 
     return docs
 
@@ -822,9 +820,7 @@ def format_car_chunks(payload: dict, include_images: bool = False) -> list[dict]
     meta = _base_metadata(car)
 
     trim_map = {
-        t.get("trim_id"): t.get("trim_name", "")
-        for t in trims
-        if t.get("trim_id")
+        t.get("trim_id"): t.get("trim_name", "") for t in trims if t.get("trim_id")
     }
 
     chunks = []

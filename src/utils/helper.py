@@ -6,7 +6,7 @@ def deep_clean(value):
     if isinstance(value, list):
         cleaned = [
             item for raw in value
-            if (item := deep_clean(raw)) not in (None, "", "0")
+            if (item := deep_clean(raw)) not in (None, "")
             and not (isinstance(item, (dict, list)) and not item)
         ]
         return cleaned or None
@@ -14,7 +14,7 @@ def deep_clean(value):
     if isinstance(value, dict):
         cleaned = {
             k: v for k, raw in value.items()
-            if (v := deep_clean(raw)) not in (None, "", "0")
+            if (v := deep_clean(raw)) not in (None, "")
             and not (isinstance(v, (dict, list)) and not v)
         }
         return cleaned or None
@@ -22,7 +22,7 @@ def deep_clean(value):
     if isinstance(value, datetime):
         return value
 
-    return None if value in (None, "", "0") else value
+    return None if value in (None, "") else value
 
 def collect_keys(data, prefix="", keys=None):
     if keys is None:
