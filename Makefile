@@ -13,9 +13,32 @@ embed-car:
 vectors-into-qdrant:
 	uv run python -m src.commands.vectors_into_qdrant --car-id $(CAR_ID)
 
+INDEX_CARS_ARGS :=
+
+ifdef START_AFTER_CAR_ID
+INDEX_CARS_ARGS += --start-after-car-id $(START_AFTER_CAR_ID)
+endif
+
+ifdef LIMIT
+INDEX_CARS_ARGS += --limit $(LIMIT)
+endif
+
+ifdef BATCH_SIZE
+INDEX_CARS_ARGS += --batch-size $(BATCH_SIZE)
+endif
+
+ifdef QDRANT_BATCH_SIZE
+INDEX_CARS_ARGS += --qdrant-batch-size $(QDRANT_BATCH_SIZE)
+endif
+
+ifdef EMBEDDING_BATCH_SIZE
+INDEX_CARS_ARGS += --embedding-batch-size $(EMBEDDING_BATCH_SIZE)
+endif
+
+ifdef DRY_RUN
+INDEX_CARS_ARGS += --dry-run
+endif
+
+.PHONY: index-all-cars
 index-all-cars:
-	uv run python -m src.commands.bulk_index_cars \
-		$(if $(START_AFTER_CAR_ID),--start-after-car-id $(START_AFTER_CAR_ID),) \
-		$(if $(LIMIT),--limit $(LIMIT),) \
-		$(if $(BATCH_SIZE),--batch-size $(BATCH_SIZE),) \
-		$(if $(DRY_RUN),--dry-run,)
+	uv run python -m src.commands.bulk_index_cars $(INDEX_CARS_ARGS)
