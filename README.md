@@ -209,4 +209,4 @@ Contributions, discussions, and feedback are welcome.
 
 ## License
 
-Distributed under the MIT License.
+Distributed under the MIT License. See `LICENSE` for more information.
