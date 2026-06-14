@@ -13,6 +13,7 @@ embed-car:
 vectors-into-qdrant:
 	uv run python -m src.commands.vectors_into_qdrant --car-id $(CAR_ID)
 
+
 INDEX_CARS_ARGS :=
 
 ifdef START_AFTER_CAR_ID
@@ -42,3 +43,56 @@ endif
 .PHONY: index-all-cars
 index-all-cars:
 	uv run python -m src.commands.bulk_index_cars $(INDEX_CARS_ARGS)
+
+
+RETRIEVE_ARGS :=
+
+ifdef QUERY
+RETRIEVE_ARGS += "$(QUERY)"
+endif
+
+ifdef TOP_K
+RETRIEVE_ARGS += --top-k $(TOP_K)
+endif
+
+ifdef BRAND_NAME
+RETRIEVE_ARGS += --brand-name "$(BRAND_NAME)"
+endif
+
+ifdef MODEL_NAME
+RETRIEVE_ARGS += --model-name "$(MODEL_NAME)"
+endif
+
+ifdef SUBMODEL_NAME
+RETRIEVE_ARGS += --submodel-name "$(SUBMODEL_NAME)"
+endif
+
+ifdef CHUNK_TYPE
+RETRIEVE_ARGS += --chunk-type "$(CHUNK_TYPE)"
+endif
+
+ifdef FUEL_TYPE
+RETRIEVE_ARGS += --fuel-type "$(FUEL_TYPE)"
+endif
+
+ifdef IS_EV
+RETRIEVE_ARGS += --is-ev
+endif
+
+ifdef MIN_PRICE
+RETRIEVE_ARGS += --min-price $(MIN_PRICE)
+endif
+
+ifdef MAX_PRICE
+RETRIEVE_ARGS += --max-price $(MAX_PRICE)
+endif
+
+
+.PHONY: test-retrieval
+test-retrieval:
+	uv run python -m src.commands.test_retrieval $(RETRIEVE_ARGS)
+
+
+.PHONY: rag-cli
+rag-cli:
+	uv run python -m src.commands.rag_cli

@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+import os
+import warnings
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
@@ -13,6 +15,9 @@ class Settings(BaseSettings):
     APP_NAME: str
 
     SQL_LOGGING: bool = True
+
+    HF_HUB_DISABLE_PROGRESS_BARS: str
+    TOKENIZERS_PARALLELISM: str
 
     QDRANT_URL: str
     QDRANT_API_KEY: Optional[str] = None
@@ -28,3 +33,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if settings.HF_HUB_DISABLE_PROGRESS_BARS:
+    os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = settings.HF_HUB_DISABLE_PROGRESS_BARS
+
+if settings.TOKENIZERS_PARALLELISM:
+    os.environ["TOKENIZERS_PARALLELISM"] = settings.TOKENIZERS_PARALLELISM
+
+warnings.filterwarnings(
+    "ignore",
+    message=".*unauthenticated requests to the HF Hub.*",
+)

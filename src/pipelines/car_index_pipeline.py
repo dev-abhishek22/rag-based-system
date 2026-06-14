@@ -242,7 +242,7 @@ class CarIndexPipeline:
         texts = [c["content"] for c in chunks]
 
         try:
-            vectors = self._get_embedding_service().embed_documents(texts)
+            vectors = self._EmbeddingService().embed_documents(texts)
         except Exception as exc:
             result["reason"] = f"embedding error: {exc}"
             logger_service.error(f"car_id={car_id} embedding failed", str(exc), "Pipeline")

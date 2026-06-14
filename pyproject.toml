@@ -12,7 +12,9 @@ dependencies = [
     "langchain-qdrant>=0.2.1",
     "loguru>=0.7.3",
     "markdownify>=1.2.2",
+    "prompt-toolkit>=3.0.52",
     "pydantic-settings>=2.11.0",
+    "pyfiglet>=1.0.4",
     "pymysql>=1.2.0",
     "python-dotenv>=1.2.1",
     "qdrant-client>=1.16.1",
@@ -20,5 +22,6 @@ dependencies = [
     "sentence-transformers>=5.1.2",
     "sqlalchemy>=2.0.50",
     "tqdm>=4.68.2",
+    "typer>=0.23.2",
     "uvicorn>=0.39.0",
 ]

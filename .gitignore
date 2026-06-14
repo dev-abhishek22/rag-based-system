@@ -22,3 +22,5 @@ Logs
 data
 
 qdrant_storage
+
+.revsearch_history
