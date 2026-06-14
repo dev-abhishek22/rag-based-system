@@ -2,7 +2,7 @@ from copy import deepcopy
 from decimal import Decimal
 from typing import Optional
 
-from src.database.connection import SessionLocal
+from src.database.sql_connection import SessionLocal
 from src.logger.logger_service import logger_service
 from src.repositories.car_etl_repository import CarEtlRepository
 from src.utils.cleaners import clean_content_fields

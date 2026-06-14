@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from src.database.connection import get_db
+from src.database.sql_connection import get_db
 from src.services.car_etl_service import CarEtlService
 
 car_router = APIRouter(prefix="/car", tags=["Car"])

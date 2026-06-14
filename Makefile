@@ -9,3 +9,6 @@ validate-chunks:
 
 embed-car:
 	uv run python -m src.scripts.embed_car_chunks --car-id $(CAR_ID)
+
+vectors-into-qdrant:
+	uv run python -m src.commands.vectors_into_qdrant --car-id $(CAR_ID)

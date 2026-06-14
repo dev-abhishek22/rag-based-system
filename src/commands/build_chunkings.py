@@ -1,7 +1,7 @@
 import argparse
 from tqdm import tqdm
 
-from src.database.connection import SessionLocal
+from src.database.sql_connection import SessionLocal
 from src.services.car_etl_service import CarEtlService
 from src.chunkers.car_chunker import format_car_chunks
 from src.utils.save_files import save_payload, save_chunks

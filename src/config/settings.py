@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from typing import Optional
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     APP_NAME: str
 
     SQL_LOGGING: bool = True
+
+    QDRANT_URL: str
+    QDRANT_API_KEY: Optional[str] = None
+
+    QDRANT_COLLECTION_NAME: str
+    QDRANT_VECTOR_SIZE: int
+    QDRANT_DISTANCE: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
